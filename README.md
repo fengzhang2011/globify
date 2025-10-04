@@ -36,10 +36,12 @@ pnpm install
 
 # Start the dev server
 pnpm dev
+```
+---
 
 ## 🗂 Project Structure
 
-```
+```bash
 globify/
 ├── apps/
 │   ├── todolist/        # Microapp: personal todo manager
@@ -49,6 +51,7 @@ globify/
 ├── static/              # Assets
 └── README.md
 ```
+---
 
 ## 🌱 Roadmap
 
