@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import { selectedOKR, selectedDate, currentView, okrDataStore } from '$lib/okr/stores.js';
-  
+
+  export let onOpenOKRKanban: () => void;
+
   // Sample OKR data with historical and predicted states
   let okrData = [
     {
@@ -532,6 +534,7 @@
           on:drop={handleDrop(okr)}
           on:dragend={handleDragEnd}
           on:click={() => handleOKRClick(okr)}
+          on:dblclick={onOpenOKRKanban}
           style="left: {pos.x}px; top: {pos.y}px; width: {nodeWidth}px; height: {nodeHeight}px; border-left-color: {getRiskColor(okr.risk)};"
         >
           <div class="okr-header-node">
@@ -692,7 +695,7 @@
     background: white;
     padding: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+    z-index: 5;
     display: flex;
     justify-content: space-between;
     align-items: center;

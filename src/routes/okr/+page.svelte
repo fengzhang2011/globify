@@ -1,8 +1,16 @@
 <script>
+  import * as Drawer from "$lib/components/ui/drawer";
+  import { Button, buttonVariants } from "$lib/components/ui/button";
+ 
   import OKRSystem from '$components/OKRSystem.svelte';
   import OKRKanban from '$components/OKRKanban.svelte';
   import OKRTimeline from '$components/OKRTimeline.svelte';
   import Kanban from '$components/Kanban.svelte';
+  import OKRCalenddr from '$components/OKRCalendar.svelte';
+
+  import OKRProjectTimeline from "$components/OKRProjectTimeline.svelte";
+
+  let OKRKanbanOpen = $state(false);
 </script>
 
 <div class="app-container">
@@ -12,21 +20,24 @@
   </div>
 
   <div class="main-layout">
+    <OKRProjectTimeline />
     <!-- OKR Chart - Full Width Top -->
-    <div class="okr-section">
-      <OKRSystem />
+    <div class="okr-section" style="display: flex">
+      <OKRSystem onOpenOKRKanban={() => OKRKanbanOpen = true} />
+      <OKRCalenddr />
     </div>
 
-    <!-- Bottom Row: Kanban and Timeline Side by Side -->
-    <div class="bottom-row">
-      <div class="kanban-section">
-        <OKRKanban />
-      </div>
-      
-      <div class="timeline-section">
-        <OKRTimeline />
-      </div>
-    </div>
+    <Drawer.Root bind:open={OKRKanbanOpen}>
+      <Drawer.Content class="bg-gray-100 flex flex-col rounded-t-[10px] h-full mt-24 max-h-[96%] fixed bottom-0 left-0 right-0">
+        <Drawer.Header>
+          <Drawer.Title>Move Goal</Drawer.Title>
+          <Drawer.Description>Set your daily activity goal.</Drawer.Description>
+        </Drawer.Header>
+        <div class="kanban-section">
+          <OKRKanban />
+        </div>
+      </Drawer.Content>
+    </Drawer.Root>
   </div>
 </div>
 
