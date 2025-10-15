@@ -1,10 +1,10 @@
 <script>
-  import Button from '$lib/components/ui/button.svelte';
-  import Card from '$lib/components/ui/card.svelte';
-  import Dialog from '$lib/components/ui/dialog.svelte';
-  import Input from '$lib/components/ui/input.svelte';
-  import Label from '$lib/components/ui/label.svelte';
-  import Select from '$lib/components/ui/select.svelte';
+  import { Button } from '$lib/components/ui/button';
+  import { Card } from '$lib/components/ui/card';
+  import Dialog from '$lib/components/ui/simple-dialog.svelte';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import Select from '$lib/components/ui/simple-select.svelte';
   import { cn } from '$lib/utils';
 
   let columns = $state([

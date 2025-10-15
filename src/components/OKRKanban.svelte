@@ -1,11 +1,11 @@
 <script>
   import { selectedOKR, okrDataStore } from '$lib/okr/stores.js';
-  import { Button, buttonVariants } from "$lib/components/ui/button";
+  import { Button } from '$lib/components/ui/button';
   import { Card } from '$lib/components/ui/card';
-  import * as Dialog from "$lib/components/ui/dialog";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import * as Select from "$lib/components/ui/select";
+  import {Dialog} from '$lib/components/ui/dialog';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import {Select} from '$lib/components/ui/select';
   import { cn } from '$lib/utils';
 
   let columns = $state([
