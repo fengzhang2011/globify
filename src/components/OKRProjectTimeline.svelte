@@ -19,9 +19,6 @@
     { date: '2025-12-31', label: 'Q4 End', type: 'deadline', description: 'Quarter ends' }
   ];
 
-  export let projectTitle = "Project Timeline";
-  export let product = "Product X";
-
   // 不同类型颜色
   const typeColor: Record<string, string> = {
     milestone: "bg-blue-500",

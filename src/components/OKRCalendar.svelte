@@ -1,12 +1,13 @@
 <script lang="ts">
   import { formatDateRange } from "little-date";
   import PlusIcon from "@lucide/svelte/icons/plus";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import Calendar from "$lib/components/ui/calendar/calendar.svelte";
   import CalendarDay from "$lib/components/ui/calendar/calendar-day.svelte";
   import * as Card from "$lib/components/ui/card";
   import { CalendarDate, isWeekend, getLocalTimeZone, type DateValue } from "@internationalized/date";
   import * as Tooltip from "$lib/components/ui/tooltip";
+  import { selectedDate } from '$lib/okr/stores.js';
 
   let keyDates = [
     { date: '2025-09-01', label: 'Q4 Start', type: 'milestone', description: 'Quarter begins' },
@@ -19,24 +20,6 @@
     { date: '2025-12-01', label: 'Final Review', type: 'review', description: 'End of quarter review' },
     { date: '2025-12-15', label: 'Planning Week', type: 'milestone', description: 'Q1 2026 planning' },
     { date: '2025-12-31', label: 'Q4 End', type: 'deadline', description: 'Quarter ends' }
-  ];
-  
-  const events = [
-    {
-      title: "Team Sync Meeting",
-      start: "2025-06-12T09:00:00",
-      end: "2025-06-12T10:00:00",
-    },
-    {
-      title: "Design Review",
-      start: "2025-06-12T11:30:00",
-      end: "2025-06-12T12:30:00",
-    },
-    {
-      title: "Client Presentation",
-      start: "2025-06-12T14:00:00",
-      end: "2025-06-12T15:00:00",
-    },
   ];
 
   function getTypeColor(type) {
@@ -93,7 +76,81 @@
   }
 
   let hoveredDate = null;
-  let value = $state<DateValue | undefined>(new CalendarDate(2025, 9, 1));
+
+  // Initialize calendar value from selectedDate store
+  let value = $state<DateValue | undefined>(
+    new CalendarDate(
+      $selectedDate.getFullYear(),
+      $selectedDate.getMonth() + 1,
+      $selectedDate.getDate()
+    )
+  );
+
+  // Sample events data - in real app this would come from a database
+  let allEvents = [
+    {
+      title: "Team Sync Meeting",
+      start: "2025-09-01T09:00:00",
+      end: "2025-09-01T10:00:00",
+    },
+    {
+      title: "Design Review",
+      start: "2025-09-01T11:30:00",
+      end: "2025-09-01T12:30:00",
+    },
+    {
+      title: "Sprint Planning",
+      start: "2025-09-15T14:00:00",
+      end: "2025-09-15T16:00:00",
+    },
+    {
+      title: "Mid Quarter Review Meeting",
+      start: "2025-10-01T10:00:00",
+      end: "2025-10-01T12:00:00",
+    },
+    {
+      title: "Product Launch Prep",
+      start: "2025-11-01T09:00:00",
+      end: "2025-11-01T17:00:00",
+    },
+    {
+      title: "Final Review",
+      start: "2025-12-01T13:00:00",
+      end: "2025-12-01T15:00:00",
+    },
+  ];
+
+  // Filter events for the selected date
+  let events = $derived.by(() => {
+    if (!value) return [];
+    const selectedDateStr = `${value.year}-${String(value.month).padStart(2, '0')}-${String(value.day).padStart(2, '0')}`;
+    return allEvents.filter(event => {
+      const eventDate = event.start.split('T')[0];
+      return eventDate === selectedDateStr;
+    });
+  });
+
+  // Watch for calendar value changes and update the store
+  $effect(() => {
+    if (value) {
+      const newDate = new Date(value.year, value.month - 1, value.day);
+      selectedDate.set(newDate);
+    }
+  });
+
+  // Watch for store changes and update calendar value
+  $effect(() => {
+    const storeDate = $selectedDate;
+    const newValue = new CalendarDate(
+      storeDate.getFullYear(),
+      storeDate.getMonth() + 1,
+      storeDate.getDate()
+    );
+    // Only update if different to avoid infinite loop
+    if (value?.compare(newValue) !== 0) {
+      value = newValue;
+    }
+  });
 </script>
 
 <Card.Root class="w-fit py-4">

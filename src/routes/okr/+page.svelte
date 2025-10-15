@@ -1,15 +1,9 @@
 <script>
   import * as Drawer from "$lib/components/ui/drawer";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
- 
   import OKRSystem from '$components/OKRSystem.svelte';
   import OKRKanban from '$components/OKRKanban.svelte';
-  import OKRTimeline from '$components/OKRTimeline.svelte';
-  import Kanban from '$components/Kanban.svelte';
-  import OKRCalenddr from '$components/OKRCalendar.svelte';
-
+  import OKRCalendar from '$components/OKRCalendar.svelte';
   import OKRProjectTimeline from "$components/OKRProjectTimeline.svelte";
-
   let OKRKanbanOpen = $state(false);
 </script>
 
@@ -22,9 +16,9 @@
   <div class="main-layout">
     <OKRProjectTimeline />
     <!-- OKR Chart - Full Width Top -->
-    <div class="okr-section" style="display: flex">
+    <div class="okr-section" style="display: flex; gap: 1.5rem;">
       <OKRSystem onOpenOKRKanban={() => OKRKanbanOpen = true} />
-      <OKRCalenddr />
+      <OKRCalendar />
     </div>
 
     <Drawer.Root bind:open={OKRKanbanOpen}>
@@ -85,23 +79,7 @@
     min-height: 500px;
   }
 
-  .bottom-row {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: 1.5rem;
-  }
-
   .kanban-section {
     min-height: 400px;
-  }
-
-  .timeline-section {
-    min-height: 400px;
-  }
-
-  @media (max-width: 1400px) {
-    .bottom-row {
-      grid-template-columns: 1fr;
-    }
   }
 </style>
