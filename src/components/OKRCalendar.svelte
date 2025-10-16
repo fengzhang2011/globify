@@ -136,7 +136,9 @@
         <Tooltip.Trigger>
           {#if !outsideMonth}
             <p>{getTypeIcon(getDayType(day))}</p>
-          {/if}      
+          {:else}
+            <p style="opacity: 0.5">{getTypeIcon(getDayType(day))}</p>
+          {/if}
         </Tooltip.Trigger>
         <Tooltip.Content>
           <div class="event-tooltip">

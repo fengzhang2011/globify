@@ -14,10 +14,11 @@
   // OKR data fetched from API
   let okrData = $state([]);
 
-  // Fetch OKR data from API on component mount
-  onMount(async () => {
+  // Fetch OKR data from API for a specific date
+  async function fetchOKRsForDate(date: Date) {
     try {
-      const response = await fetch('/api/okrs');
+      const dateStr = date.toISOString().split('T')[0];
+      const response = await fetch(`/api/okrs?date=${dateStr}`);
       const result = await response.json();
       if (result.success) {
         okrData = result.data;
@@ -26,6 +27,17 @@
     } catch (error) {
       console.error('Failed to fetch OKR data:', error);
     }
+  }
+
+  // Fetch OKR data on component mount
+  onMount(() => {
+    fetchOKRsForDate($selectedDate);
+  });
+
+  // Watch for selectedDate changes and refetch OKRs
+  $effect(() => {
+    const date = $selectedDate;
+    fetchOKRsForDate(date);
   });
 
   let draggedOKR = $state(null);
@@ -53,30 +65,8 @@
   const nodeSpacing = 60;
   const headerOffset = 70; // Offset for sticky header height
 
-  // Get OKR data for a specific date
-  function getOKRDataForDate(okr, date) {
-    const dateStr = formatDate(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const targetDate = new Date(date);
-    targetDate.setHours(0, 0, 0, 0);
-
-    if (targetDate < today && okr.history[dateStr]) {
-      return { ...okr, ...okr.history[dateStr], viewType: 'historical' };
-    } else if (targetDate > today && okr.predictions[dateStr]) {
-      return { ...okr, ...okr.predictions[dateStr], viewType: 'predicted' };
-    }
-    return { ...okr, viewType: 'current' };
-  }
-
-  function formatDate(date) {
-    return date.toISOString().split('T')[0];
-  }
-
   function getOKRsByLevel() {
-    const currentDate = $selectedDate;
-    const processedOKRs = okrData.map(okr => getOKRDataForDate(okr, currentDate));
-
+    // OKRs are already processed by the API for the selected date
     const levels = {};
     const processed = new Set();
 
@@ -87,11 +77,11 @@
       if (!levels[level]) levels[level] = [];
       levels[level].push(okr);
 
-      const children = processedOKRs.filter(o => o.parentId === okr.id);
+      const children = okrData.filter(o => o.parentId === okr.id);
       children.forEach(child => assignLevel(child, level + 1));
     }
 
-    const roots = processedOKRs.filter(o => o.parentId === null);
+    const roots = okrData.filter(o => o.parentId === null);
     roots.forEach(root => assignLevel(root, 0));
 
     return levels;
@@ -453,15 +443,23 @@
             </div>
           </div>
 
-          {#if okr.viewType === 'historical'}
-            <div class="absolute top-0 right-2 bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
-              Historical
-            </div>
-          {:else if okr.viewType === 'predicted'}
-            <div class="absolute top-0 right-2 bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
-              Predicted
-            </div>
-          {/if}
+          <!-- Status badges -->
+          <div class="absolute top-0 right-2 flex gap-1">
+            {#if okr.status === 'finished'}
+              <div class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
+                ✓ Finished
+              </div>
+            {/if}
+            {#if okr.viewType === 'historical'}
+              <div class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
+                Historical
+              </div>
+            {:else if okr.viewType === 'predicted'}
+              <div class="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
+                Predicted
+              </div>
+            {/if}
+          </div>
           <div class="absolute top-0 left-2 bg-purple-100 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase" style="color: {getRiskColor(okr.risk)};">
             ⚠️ {okr.risk}
           </div>

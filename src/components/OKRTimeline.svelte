@@ -2,7 +2,14 @@
   import { selectedDate } from '$lib/okr/stores.js';
   import {Button} from '$lib/components/ui/button';
   import {Card} from '$lib/components/ui/card';
+  import * as Dialog from '$lib/components/ui/dialog';
   import { cn } from '$lib/utils';
+
+  let showOKRSnapshot = $state(false);
+  let snapshotDate = $state(null);
+  let snapshotOKRs = $state([]);
+  let snapshotMeta = $state(null);
+  let isLoadingSnapshot = $state(false);
 
   let keyDates = $state([
     { date: '2025-09-01', label: 'Q4 Start', type: 'milestone', description: 'Quarter begins' },
@@ -37,6 +44,41 @@
 
   function handleDateClick(dateStr) {
     selectedDate.set(new Date(dateStr));
+  }
+
+  async function showOKRSnapshotForDate(dateStr) {
+    snapshotDate = dateStr;
+    isLoadingSnapshot = true;
+    showOKRSnapshot = true;
+
+    try {
+      const response = await fetch(`/api/okrs?date=${dateStr}`);
+      const result = await response.json();
+      if (result.success) {
+        snapshotOKRs = result.data;
+        snapshotMeta = result.meta;
+      }
+    } catch (error) {
+      console.error('Failed to fetch OKR snapshot:', error);
+    } finally {
+      isLoadingSnapshot = false;
+    }
+  }
+
+  function getProgressColor(progress) {
+    if (progress >= 75) return 'bg-green-500';
+    if (progress >= 50) return 'bg-blue-500';
+    if (progress >= 25) return 'bg-yellow-500';
+    return 'bg-red-500';
+  }
+
+  function getRiskColor(risk) {
+    switch(risk) {
+      case 'high': return '#ef4444';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#10b981';
+      default: return '#64748b';
+    }
   }
 
   function getTypeColor(type) {
@@ -156,15 +198,15 @@
 
         <div
           class={cn(
-            "flex gap-4 mb-8 cursor-pointer transition-all p-2 rounded-lg relative",
+            "flex gap-4 mb-8 cursor-pointer transition-all p-2 rounded-lg relative hover:bg-slate-50",
             isSelectedDate && "bg-blue-50 ring-2 ring-blue-600"
           )}
-          onclick={() => handleDateClick(keyDate.date)}
+          onclick={() => showOKRSnapshotForDate(keyDate.date)}
           onmouseenter={() => hoveredDate = keyDate.date}
           onmouseleave={() => hoveredDate = null}
         >
           <div
-            class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center relative z-10 shadow-[0_0_0_4px_white]"
+            class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center relative z-10 shadow-[0_0_0_4px_white] hover:scale-110 transition-transform"
             style="background-color: {getTypeColor(keyDate.type)}"
           >
             <span class="text-xl">{getTypeIcon(keyDate.type)}</span>
@@ -219,13 +261,13 @@
 
             <div
               class={cn(
-                "aspect-square border border-slate-200 rounded-lg p-2 cursor-pointer relative flex flex-col items-center justify-center transition-all bg-white",
+                "aspect-square border border-slate-200 rounded-lg p-2 cursor-pointer relative flex flex-col items-center justify-center transition-all bg-white hover:border-blue-400",
                 keyDate && "bg-yellow-50",
                 isPastDate && "opacity-60",
                 isToday(dateStr) && "border-red-500 border-2",
                 isSelectedDate && "bg-blue-50 border-blue-600 border-2"
               )}
-              onclick={() => handleDateClick(dateStr)}
+              onclick={() => keyDate ? showOKRSnapshotForDate(dateStr) : handleDateClick(dateStr)}
               onmouseenter={() => hoveredDate = dateStr}
               onmouseleave={() => hoveredDate = null}
             >
@@ -270,3 +312,91 @@
     </div>
   {/if}
 </Card>
+
+<!-- OKR Snapshot Modal -->
+<Dialog.Root bind:open={showOKRSnapshot}>
+  <Dialog.Content class="max-w-4xl max-h-[80vh] overflow-y-auto">
+    <Dialog.Header>
+      <Dialog.Title>
+        OKR Snapshot - {snapshotDate ? new Date(snapshotDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}
+      </Dialog.Title>
+      <Dialog.Description>
+        {#if snapshotMeta}
+          Showing {snapshotMeta.total} OKRs ({snapshotMeta.active} active, {snapshotMeta.finished} finished) as of this date
+        {/if}
+      </Dialog.Description>
+    </Dialog.Header>
+
+    <div class="py-4">
+      {#if isLoadingSnapshot}
+        <div class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      {:else if snapshotOKRs.length === 0}
+        <div class="text-center py-12 text-slate-500">
+          <div class="text-5xl mb-4">📋</div>
+          <p>No OKRs found for this date</p>
+        </div>
+      {:else}
+        <div class="space-y-3">
+          {#each snapshotOKRs as okr}
+            <Card class="p-4 border-l-4" style="border-left-color: {okr.type === 'objective' ? '#3b82f6' : '#10b981'}">
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded uppercase" style="background-color: {okr.type === 'objective' ? '#dbeafe' : '#d1fae5'}; color: {okr.type === 'objective' ? '#1e40af' : '#065f46'}">
+                      {okr.type === 'objective' ? 'Objective' : 'Key Result'}
+                    </span>
+                    {#if okr.status === 'finished'}
+                      <span class="text-xs font-semibold px-2 py-0.5 rounded uppercase bg-green-100 text-green-800">
+                        ✓ Finished
+                      </span>
+                    {/if}
+                    {#if okr.viewType === 'historical'}
+                      <span class="text-xs font-semibold px-2 py-0.5 rounded uppercase bg-amber-100 text-amber-800">
+                        Historical
+                      </span>
+                    {:else if okr.viewType === 'predicted'}
+                      <span class="text-xs font-semibold px-2 py-0.5 rounded uppercase bg-purple-100 text-purple-800">
+                        Predicted
+                      </span>
+                    {/if}
+                  </div>
+                  <h4 class="font-semibold text-slate-900 mb-1">{okr.title}</h4>
+                  <div class="flex items-center gap-3 text-xs text-slate-600">
+                    <span>👤 {okr.owner}</span>
+                    <span>📅 {okr.daysLeft}d left</span>
+                    <span class="px-2 py-0.5 rounded" style="background-color: {getRiskColor(okr.risk)}20; color: {getRiskColor(okr.risk)}">
+                      ⚠️ {okr.risk} risk
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progress bar -->
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs text-slate-600">
+                  <span>Progress</span>
+                  <span class="font-semibold">{okr.progress}%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    class={cn("h-full transition-all rounded-full", getProgressColor(okr.progress))}
+                    style="width: {okr.progress}%"
+                  ></div>
+                </div>
+              </div>
+            </Card>
+          {/each}
+        </div>
+      {/if}
+    </div>
+
+    <Dialog.Footer>
+      <Button variant="secondary" onclick={() => showOKRSnapshot = false}>Close</Button>
+      <Button onclick={() => { handleDateClick(snapshotDate); showOKRSnapshot = false; }}>
+        Navigate to this date
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
