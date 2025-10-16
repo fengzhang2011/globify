@@ -1,5 +1,7 @@
 <script>
+  import { Button } from '$lib/components/ui/button';
   import * as Drawer from "$lib/components/ui/drawer";
+  import { goto } from '$app/navigation';
   import OKRSystem from '$components/OKRSystem.svelte';
   import OKRKanban from '$components/OKRKanban.svelte';
   import OKRCalendar from '$components/OKRCalendar.svelte';
@@ -8,11 +10,23 @@
 </script>
 
 <div class="app-container">
-  <div class="app-header">
-    <h1>🎯 OKR Management System</h1>
-    <p>Integrated Objectives and Key Results tracking with tasks and timeline</p>
+  <!-- Header -->
+  <div class="bg-sky-500/100 border-b border-slate-200 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onclick={() => goto('/')}>
+            ←
+          </Button>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">🎯 OKR Management System</h1>
+            <p class="text-sm text-white-800">Integrated Objectives and Key Results tracking with tasks and timeline</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-
+  
   <div class="main-layout">
     <OKRProjectTimeline />
     <!-- OKR Chart - Full Width Top -->
@@ -45,26 +59,6 @@
   .app-container {
     min-height: 100vh;
     background: #f1f5f9;
-  }
-
-  .app-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .app-header h1 {
-    margin: 0 0 0.5rem 0;
-    font-size: 2rem;
-    font-weight: 700;
-  }
-
-  .app-header p {
-    margin: 0;
-    font-size: 1rem;
-    opacity: 0.9;
   }
 
   .main-layout {
