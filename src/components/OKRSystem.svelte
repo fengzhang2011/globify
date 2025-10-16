@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { selectedOKR, selectedDate, currentView, okrDataStore } from '$lib/okr/stores.js';
   import { Button } from '$lib/components/ui/button';
   import { Card } from '$lib/components/ui/card';
@@ -10,123 +11,22 @@
 
   let { onOpenOKRKanban }: { onOpenOKRKanban: () => void } = $props();
 
-  // Sample OKR data with historical and predicted states
-  let okrData = $state([
-    {
-      id: 1,
-      title: 'Increase Revenue by 50%',
-      type: 'objective',
-      parentId: null,
-      progress: 65,
-      risk: 'low',
-      daysLeft: 45,
-      owner: 'CEO',
-      quarter: 'Q4 2025',
-      history: {
-        '2025-09-01': { progress: 20, risk: 'medium', daysLeft: 90 },
-        '2025-10-01': { progress: 45, risk: 'low', daysLeft: 60 }
-      },
-      predictions: {
-        '2025-11-15': { progress: 75, risk: 'low', daysLeft: 30 },
-        '2025-12-01': { progress: 85, risk: 'low', daysLeft: 15 }
+  // OKR data fetched from API
+  let okrData = $state([]);
+
+  // Fetch OKR data from API on component mount
+  onMount(async () => {
+    try {
+      const response = await fetch('/api/okrs');
+      const result = await response.json();
+      if (result.success) {
+        okrData = result.data;
+        okrDataStore.set(result.data);
       }
-    },
-    {
-      id: 2,
-      title: 'Launch 3 new products',
-      type: 'key_result',
-      parentId: 1,
-      progress: 66,
-      risk: 'medium',
-      daysLeft: 45,
-      owner: 'Product Team',
-      quarter: 'Q4 2025',
-      history: {
-        '2025-09-01': { progress: 0, risk: 'high', daysLeft: 90 },
-        '2025-10-01': { progress: 33, risk: 'medium', daysLeft: 60 }
-      },
-      predictions: {
-        '2025-11-15': { progress: 80, risk: 'low', daysLeft: 30 },
-        '2025-12-01': { progress: 100, risk: 'low', daysLeft: 15 }
-      }
-    },
-    {
-      id: 3,
-      title: 'Acquire 10,000 new customers',
-      type: 'key_result',
-      parentId: 1,
-      progress: 70,
-      risk: 'low',
-      daysLeft: 45,
-      owner: 'Marketing',
-      quarter: 'Q4 2025',
-      history: {
-        '2025-09-01': { progress: 25, risk: 'medium', daysLeft: 90 },
-        '2025-10-01': { progress: 50, risk: 'low', daysLeft: 60 }
-      },
-      predictions: {
-        '2025-11-15': { progress: 85, risk: 'low', daysLeft: 30 },
-        '2025-12-01': { progress: 95, risk: 'low', daysLeft: 15 }
-      }
-    },
-    {
-      id: 4,
-      title: 'Product A - MVP Launch',
-      type: 'objective',
-      parentId: 2,
-      progress: 80,
-      risk: 'low',
-      daysLeft: 45,
-      owner: 'Team A',
-      quarter: 'Q4 2025',
-      history: {
-        '2025-09-01': { progress: 20, risk: 'high', daysLeft: 90 },
-        '2025-10-01': { progress: 50, risk: 'medium', daysLeft: 60 }
-      },
-      predictions: {
-        '2025-11-15': { progress: 90, risk: 'low', daysLeft: 30 },
-        '2025-12-01': { progress: 100, risk: 'low', daysLeft: 15 }
-      }
-    },
-    {
-      id: 5,
-      title: 'Product B - Beta Testing',
-      type: 'objective',
-      parentId: 2,
-      progress: 60,
-      risk: 'medium',
-      daysLeft: 45,
-      owner: 'Team B',
-      quarter: 'Q4 2025',
-      history: {
-        '2025-09-01': { progress: 10, risk: 'high', daysLeft: 90 },
-        '2025-10-01': { progress: 35, risk: 'medium', daysLeft: 60 }
-      },
-      predictions: {
-        '2025-11-15': { progress: 75, risk: 'low', daysLeft: 30 },
-        '2025-12-01': { progress: 95, risk: 'low', daysLeft: 15 }
-      }
-    },
-    {
-      id: 6,
-      title: 'Improve conversion rate to 5%',
-      type: 'key_result',
-      parentId: 3,
-      progress: 75,
-      risk: 'low',
-      daysLeft: 45,
-      owner: 'Growth Team',
-      quarter: 'Q4 2025',
-      history: {
-        '2025-09-01': { progress: 30, risk: 'medium', daysLeft: 90 },
-        '2025-10-01': { progress: 55, risk: 'low', daysLeft: 60 }
-      },
-      predictions: {
-        '2025-11-15': { progress: 88, risk: 'low', daysLeft: 30 },
-        '2025-12-01': { progress: 100, risk: 'low', daysLeft: 15 }
-      }
+    } catch (error) {
+      console.error('Failed to fetch OKR data:', error);
     }
-  ]);
+  });
 
   let draggedOKR = $state(null);
   let hoveredOKR = $state(null);
@@ -148,10 +48,10 @@
   });
 
   const nodeWidth = 240;
-  const nodeHeight = 140;
+  const nodeHeight = 150;
   const levelHeight = 200;
   const nodeSpacing = 60;
-  const headerOffset = 120; // Offset for sticky header height
+  const headerOffset = 70; // Offset for sticky header height
 
   // Get OKR data for a specific date
   function getOKRDataForDate(okr, date) {
@@ -199,11 +99,11 @@
 
   function getNodePosition(level, index, totalInLevel) {
     const totalWidth = totalInLevel * (nodeWidth + nodeSpacing) - nodeSpacing;
-    const containerWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const containerWidth = typeof window !== 'undefined' ? window.innerWidth - 350: 1200;
 
     let startX;
     if (alignment === 'left') {
-      startX = 50;
+      startX = 20;
     } else if (alignment === 'right') {
       startX = containerWidth - totalWidth - 50;
     } else {
@@ -212,7 +112,7 @@
 
     return {
       x: startX + index * (nodeWidth + nodeSpacing),
-      y: 100 + level * levelHeight
+      y: 50 + level * levelHeight
     };
   }
 
@@ -452,7 +352,7 @@
 </script>
 
 <div class="w-full min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 overflow-auto relative">
-  <div class="sticky top-0 bg-white p-6 shadow-sm z-[5] flex justify-between items-center">
+  <div class="sticky top-0 bg-white pt-1 pb-1 pl-6 pr-6 shadow-sm z-[5] flex justify-between items-center">
     <div>
       <h1 class="text-3xl font-bold text-slate-900 mb-1">OKR System</h1>
       <p class="text-sm text-slate-600 flex items-center gap-2">
@@ -501,7 +401,7 @@
 
         <Card
           class={cn(
-            "absolute p-4 cursor-move transition-all border-l-[5px]",
+            "gap-0 absolute p-4 cursor-move transition-all border-l-[5px]",
             isBeingDragged && "opacity-50 scale-95",
             isHovered && "ring-4 ring-blue-400 scale-105",
             isHighlighted && "ring-3 ring-blue-600"
@@ -517,7 +417,7 @@
           ondblclick={onOpenOKRKanban}
           style="left: {pos.x}px; top: {pos.y}px; width: {nodeWidth}px; height: {nodeHeight}px; border-left-color: {getRiskColor(okr.risk)};"
         >
-          <div class="flex justify-between items-center mb-2">
+          <div class="flex justify-between items-center mt-1">
             <span class="text-xl">{okr.type === 'objective' ? '🎯' : '🔑'}</span>
             <div class="flex gap-1">
               <Button size="icon" variant="ghost" class="h-6 w-6" onclick={(e) => { e.stopPropagation(); openAddModal(okr); }} title="Add child">
@@ -532,42 +432,40 @@
             </div>
           </div>
 
-          <h4 class="text-sm font-semibold text-slate-900 mb-3 line-clamp-2 min-h-[2.6em]">{okr.title}</h4>
+          <h4 class="text-sm font-semibold text-slate-900 line-clamp-2 min-h-[4.3em]" style="display: flex; align-items: center">
+            {okr.title}
+          </h4>
 
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1">
               <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div class="h-full transition-all" style="width: {okr.progress}%; background-color: {getProgressColor(okr.progress)};"></div>
               </div>
               <span class="text-xs font-semibold text-slate-600 min-w-[35px]">{okr.progress}%</span>
             </div>
-
             <div class="flex justify-between items-center text-xs">
-              <span class="font-semibold uppercase" style="color: {getRiskColor(okr.risk)};">
-                ⚠️ {okr.risk}
+              <span class="text-xs text-slate-600">
+                👤 {okr.owner}
               </span>
               <span class="text-slate-600">
                 📅 {okr.daysLeft}d left
               </span>
             </div>
-
-            {#if okr.owner}
-              <div class="text-xs text-slate-600 pt-2 border-t border-slate-200">
-                👤 {okr.owner}
-              </div>
-            {/if}
           </div>
 
           {#if okr.viewType === 'historical'}
-            <div class="absolute top-2 right-2 bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
+            <div class="absolute top-0 right-2 bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
               Historical
             </div>
           {:else if okr.viewType === 'predicted'}
-            <div class="absolute top-2 right-2 bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
+            <div class="absolute top-0 right-2 bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase">
               Predicted
             </div>
           {/if}
-        </Card>
+          <div class="absolute top-0 left-2 bg-purple-100 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase" style="color: {getRiskColor(okr.risk)};">
+            ⚠️ {okr.risk}
+          </div>
+      </Card>
       {/each}
     {/each}
   </div>

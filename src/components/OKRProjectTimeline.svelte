@@ -56,7 +56,7 @@
   }
 </script>
 
-<div class="p-8">
+<div class="pt-5 pb-2 pl-15 pr-15">
   <div class="relative border-t-4 border-gray-900 h-2 w-full mt-20 mb-24">
     {#each sortedDates as item, index}
       <div
@@ -69,7 +69,7 @@
         {#if index % 2 === 0}
           <div class={`w-[2px] h-7 ${typeColor[item.type] ?? "bg-blue-500"}`}></div>
           <div class={`w-2 h-2 rounded-full ${typeColor[item.type] ?? "bg-blue-500"} flex items-center justify-center text-white font-semibold z-10 shadow-md`}></div>
-          <div class="mt-3 max-w-[160px]">
+          <div class="mt-3 w-[160px]">
             <h3 class="font-semibold text-sm">{item.label}</h3>
             <p class="text-xs text-gray-600">{item.date}</p>
             {#if item.description}
@@ -79,7 +79,7 @@
           {:else}
           <div class={`w-[2px] h-7 ${typeColor[item.type] ?? "bg-blue-500"}`} style="transform: translateY(-60px)"></div>
           <div class={`w-2 h-2 rounded-full ${typeColor[item.type] ?? "bg-blue-500"} flex items-center justify-center text-white font-semibold z-10 shadow-md`} style="transform: translateY(-95px)"></div>
-          <div class="mt-3 max-w-[160px]" style="transform: translateY(-180px)">
+          <div class="mt-3 w-[160px]" style="transform: translateY(-180px)">
             <h3 class="font-semibold text-sm">{item.label}</h3>
             <p class="text-xs text-gray-600">{item.date}</p>
             {#if item.description}

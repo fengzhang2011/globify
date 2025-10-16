@@ -23,10 +23,10 @@
 
     <Drawer.Root bind:open={OKRKanbanOpen}>
       <Drawer.Content class="bg-gray-100 flex flex-col rounded-t-[10px] h-full mt-24 max-h-[96%] fixed bottom-0 left-0 right-0">
-        <Drawer.Header>
+        <!-- <Drawer.Header>
           <Drawer.Title>Move Goal</Drawer.Title>
           <Drawer.Description>Set your daily activity goal.</Drawer.Description>
-        </Drawer.Header>
+        </Drawer.Header> -->
         <div class="kanban-section">
           <OKRKanban />
         </div>
@@ -50,7 +50,7 @@
   .app-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 2rem;
+    padding: 1rem;
     text-align: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }

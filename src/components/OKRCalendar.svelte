@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { formatDateRange } from "little-date";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import { Button } from "$lib/components/ui/button";
@@ -9,18 +10,22 @@
   import * as Tooltip from "$lib/components/ui/tooltip";
   import { selectedDate } from '$lib/okr/stores.js';
 
-  let keyDates = [
-    { date: '2025-09-01', label: 'Q4 Start', type: 'milestone', description: 'Quarter begins' },
-    { date: '2025-09-15', label: 'Sprint 1 End', type: 'sprint', description: 'First sprint completion' },
-    { date: '2025-10-01', label: 'Mid Quarter Review', type: 'review', description: 'Progress review meeting' },
-    { date: '2025-10-08', label: 'Today', type: 'current', description: 'Current date' },
-    { date: '2025-10-15', label: 'Sprint 2 End', type: 'sprint', description: 'Second sprint completion' },
-    { date: '2025-11-01', label: 'Product Launch', type: 'milestone', description: 'Major product release' },
-    { date: '2025-11-15', label: 'Sprint 3 End', type: 'sprint', description: 'Third sprint completion' },
-    { date: '2025-12-01', label: 'Final Review', type: 'review', description: 'End of quarter review' },
-    { date: '2025-12-15', label: 'Planning Week', type: 'milestone', description: 'Q1 2026 planning' },
-    { date: '2025-12-31', label: 'Q4 End', type: 'deadline', description: 'Quarter ends' }
-  ];
+  let keyDates = $state([]);
+  let allEvents = $state([]);
+
+  // Fetch events and key dates from API on component mount
+  onMount(async () => {
+    try {
+      const response = await fetch('/api/events');
+      const result = await response.json();
+      if (result.success) {
+        allEvents = result.data.events;
+        keyDates = result.data.keyDates;
+      }
+    } catch (error) {
+      console.error('Failed to fetch event data:', error);
+    }
+  });
 
   function getTypeColor(type) {
     switch(type) {
@@ -85,40 +90,6 @@
       $selectedDate.getDate()
     )
   );
-
-  // Sample events data - in real app this would come from a database
-  let allEvents = [
-    {
-      title: "Team Sync Meeting",
-      start: "2025-09-01T09:00:00",
-      end: "2025-09-01T10:00:00",
-    },
-    {
-      title: "Design Review",
-      start: "2025-09-01T11:30:00",
-      end: "2025-09-01T12:30:00",
-    },
-    {
-      title: "Sprint Planning",
-      start: "2025-09-15T14:00:00",
-      end: "2025-09-15T16:00:00",
-    },
-    {
-      title: "Mid Quarter Review Meeting",
-      start: "2025-10-01T10:00:00",
-      end: "2025-10-01T12:00:00",
-    },
-    {
-      title: "Product Launch Prep",
-      start: "2025-11-01T09:00:00",
-      end: "2025-11-01T17:00:00",
-    },
-    {
-      title: "Final Review",
-      start: "2025-12-01T13:00:00",
-      end: "2025-12-01T15:00:00",
-    },
-  ];
 
   // Filter events for the selected date
   let events = $derived.by(() => {

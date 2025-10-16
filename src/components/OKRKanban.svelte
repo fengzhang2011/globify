@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from 'svelte';
   import { selectedOKR, okrDataStore } from '$lib/okr/stores.js';
   import { Button } from '$lib/components/ui/button';
   import { Card } from '$lib/components/ui/card';
@@ -8,31 +9,24 @@
   import {Select} from '$lib/components/ui/select';
   import { cn } from '$lib/utils';
 
-  let columns = $state([
-    { id: 1, title: 'To Do', color: '#64748b' },
-    { id: 2, title: 'In Progress', color: '#3b82f6' },
-    { id: 3, title: 'Review', color: '#f59e0b' },
-    { id: 4, title: 'Done', color: '#10b981' }
-  ]);
+  let columns = $state([]);
+  let priorities = $state([]);
+  let allTasks = $state([]);
 
-  let priorities = $state([
-    { priority: 'low', title: 'Low', color: '#10b981' },
-    { priority: 'medium', title: 'Medium', color: '#f59e0b' },
-    { priority: 'high', title: 'High', color: '#ef4444' },
-  ]);
-
-  let allTasks = $state([
-    { id: 1, title: 'Design Product A UI', okrId: 4, columnId: 4, priority: 'high', assignee: 'Sarah' },
-    { id: 2, title: 'Develop backend API', okrId: 4, columnId: 2, priority: 'high', assignee: 'John' },
-    { id: 3, title: 'User testing sessions', okrId: 4, columnId: 1, priority: 'medium', assignee: 'Mike' },
-    { id: 4, title: 'Product B requirements', okrId: 5, columnId: 4, priority: 'high', assignee: 'Lisa' },
-    { id: 5, title: 'Beta user recruitment', okrId: 5, columnId: 2, priority: 'medium', assignee: 'Sarah' },
-    { id: 6, title: 'A/B testing framework', okrId: 6, columnId: 4, priority: 'high', assignee: 'John' },
-    { id: 7, title: 'Optimize landing pages', okrId: 6, columnId: 2, priority: 'high', assignee: 'Mike' },
-    { id: 8, title: 'Marketing campaign Q4', okrId: 3, columnId: 2, priority: 'high', assignee: 'Lisa' },
-    { id: 9, title: 'Product A deployment', okrId: 4, columnId: 3, priority: 'high', assignee: 'John' },
-    { id: 10, title: 'Customer feedback analysis', okrId: 3, columnId: 1, priority: 'medium', assignee: 'Sarah' }
-  ]);
+  // Fetch tasks, columns, and priorities from API on component mount
+  onMount(async () => {
+    try {
+      const response = await fetch('/api/tasks');
+      const result = await response.json();
+      if (result.success) {
+        allTasks = result.data.tasks;
+        columns = result.data.columns;
+        priorities = result.data.priorities;
+      }
+    } catch (error) {
+      console.error('Failed to fetch task data:', error);
+    }
+  });
 
   let draggedTask = $state(null);
   let draggedOverColumn = $state(null);
@@ -266,8 +260,8 @@
   }
 </script>
 
-<Card class="w-full min-h-[400px]">
-  <div class="flex justify-between items-center p-6 border-b border-slate-200">
+<Card class="w-full min-h-[400px] py-0">
+  <div class="flex justify-between items-center px-6 py-2 border-b border-slate-200">
     <div>
       <h2 class="text-2xl font-bold text-slate-900 mb-1">Tasks</h2>
       {#if $selectedOKR}
