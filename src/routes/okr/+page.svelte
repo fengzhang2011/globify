@@ -11,7 +11,7 @@
 
 <div class="app-container">
   <!-- Header -->
-  <div class="bg-sky-500/100 border-b border-slate-200 sticky top-0 z-10">
+  <div class="bg-white border-b border-slate-200 sticky top-0 z-10">
     <div class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">

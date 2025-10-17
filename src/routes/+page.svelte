@@ -30,6 +30,14 @@
       description: 'Jira-like Issue Tracking System'
     },
     {
+      id: 'chat',
+      name: 'Chat',
+      icon: '💬',
+      color: 'bg-gradient-to-br from-cyan-500 to-cyan-600',
+      route: '/chat',
+      description: 'Real-time Messaging with MQTT & WebSockets'
+    },
+    {
       id: 'analytics',
       name: 'Analytics',
       icon: '📊',
