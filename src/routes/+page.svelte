@@ -30,6 +30,14 @@
       description: 'Jira-like Issue Tracking System'
     },
     {
+      id: 'crm',
+      name: 'CRM',
+      icon: '💼',
+      color: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+      route: '/crm',
+      description: 'Track Leads and Close Opportunities'
+    },
+    {
       id: 'chat',
       name: 'Chat',
       icon: '💬',
