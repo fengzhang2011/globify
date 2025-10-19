@@ -62,10 +62,10 @@
   }
 
   .main-layout {
-    padding: 1.5rem;
+    padding: 0.2rem 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0.2rem;
   }
 
   .okr-section {

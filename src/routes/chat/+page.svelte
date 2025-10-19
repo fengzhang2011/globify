@@ -54,6 +54,7 @@
 	let conversationsList = $derived($conversationsStore);
 
 	onMount(async () => {
+    await chatStore.loadConversations();
     return;
 		// Initialize demo data first (works offline)
 		await initializeDemoData();

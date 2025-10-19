@@ -4,6 +4,8 @@
   import { Card } from '$lib/components/ui/card';
   import * as Dialog from '$lib/components/ui/dialog';
   import { cn } from '$lib/utils';
+  import { onMount } from 'svelte';
+  import * as Tooltip from "$lib/components/ui/tooltip";
 
   export interface KeyDate {
     date: string;
@@ -30,15 +32,24 @@
   let snapshotOKRs = $state([]);
   let snapshotMeta = $state(null);
   let isLoadingSnapshot = $state(false);
-  let hoveredIndex = $state(null);
+  let currentIndex = $state(0);
+  let scrollContainer: HTMLDivElement;
 
   // Type colors
   const typeColor: Record<string, string> = {
     milestone: "bg-blue-500",
     sprint: "bg-green-500",
     review: "bg-yellow-500",
-    current: "bg-red-500 animate-pulse",
+    current: "bg-red-500",
     deadline: "bg-gray-600"
+  };
+
+  const typeBorderColor: Record<string, string> = {
+    milestone: "border-blue-500",
+    sprint: "border-green-500",
+    review: "border-yellow-500",
+    current: "border-red-500",
+    deadline: "border-gray-600"
   };
 
   function getTypeIcon(type) {
@@ -58,15 +69,12 @@
     .map(d => ({ ...d, dateObj: new Date(d.date) }))
     .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime()));
 
-  // Get earliest and latest dates
-  const minDate = $derived(sortedDates[0]?.dateObj.getTime() || 0);
-  const maxDate = $derived(sortedDates[sortedDates.length - 1]?.dateObj.getTime() || 0);
-  const totalRange = $derived(maxDate - minDate);
+  // Find current date index
+  const currentDateIndex = $derived(sortedDates.findIndex(d => d.type === 'current'));
 
-  function getPosition(dateObj: Date): string {
-    const ratio = (dateObj.getTime() - minDate) / totalRange;
-    return `${ratio * 100}%`;
-  }
+  // Calculate visible items (7 at a time)
+  const visibleItems = $derived(sortedDates.slice(currentIndex, currentIndex + 100));
+  // const visibleItems = $derived(sortedDates);
 
   function handleDateClick(dateStr: string) {
     selectedDate.set(new Date(dateStr));
@@ -91,6 +99,33 @@
     }
   }
 
+  function scrollLeft() {
+    if (currentIndex > 0) {
+      currentIndex = currentIndex - 1;
+      console.log('Scrolled left, new index:', currentIndex);
+    }
+  }
+
+  function scrollRight() {
+    const maxIndex = Math.max(0, sortedDates.length - 7);
+    if (currentIndex < maxIndex) {
+      currentIndex = currentIndex + 1;
+      console.log('Scrolled right, new index:', currentIndex);
+    }
+  }
+
+  // Computed values for button states
+  const canScrollLeft = $derived(currentIndex > 0);
+  const canScrollRight = $derived(currentIndex < Math.max(0, sortedDates.length - 7));
+
+  // Center current date on mount
+  onMount(() => {
+    if (currentDateIndex >= 0) {
+      // Center the current date (show 3 before, current, 3 after)
+      currentIndex = Math.max(0, Math.min(currentDateIndex - 3, sortedDates.length - 7));
+    }
+  });
+
   function getProgressColor(progress) {
     if (progress >= 75) return 'bg-green-500';
     if (progress >= 50) return 'bg-blue-500';
@@ -108,53 +143,67 @@
   }
 </script>
 
-<div class="pt-5 pb-2 pl-15 pr-15">
-  <div class="relative border-t-4 border-gray-900 h-2 w-full mt-20 mb-24">
-    {#each sortedDates as item, index}
-      <button
-        class="absolute flex flex-col items-center text-center cursor-pointer group"
-        style={`left:${getPosition(item.dateObj)}; transform: translateX(-50%) translateY(-17px);`}
-        onclick={() => showOKRSnapshotForDate(item.date)}
-        onmouseenter={() => hoveredIndex = index}
-        onmouseleave={() => hoveredIndex = null}
-        tabindex="0"
-      >
-        <div class={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold z-10 shadow-md transition-all",
-          typeColor[item.type] ?? "bg-blue-500",
-          hoveredIndex === index && "scale-125 shadow-lg"
-        )}>
-          {getTypeIcon(item.type)}
-        </div>
-        {#if index % 2 === 0}
-          <div class={`w-[2px] h-7 ${typeColor[item.type] ?? "bg-blue-500"}`}></div>
-          <div class={`w-2 h-2 rounded-full ${typeColor[item.type] ?? "bg-blue-500"} flex items-center justify-center text-white font-semibold z-10 shadow-md`}></div>
-          <div class={cn(
-            "mt-3 w-[160px] transition-all",
-            hoveredIndex === index && "transform scale-105"
-          )}>
-            <h3 class="font-semibold text-sm">{item.label}</h3>
-            <p class="text-xs text-gray-600">{item.date}</p>
-            {#if item.description}
-              <p class="text-xs text-gray-500 mt-1">{item.description}</p>
-            {/if}
-          </div>
-          {:else}
-          <div class={`w-[2px] h-7 ${typeColor[item.type] ?? "bg-blue-500"}`} style="transform: translateY(-60px)"></div>
-          <div class={`w-2 h-2 rounded-full ${typeColor[item.type] ?? "bg-blue-500"} flex items-center justify-center text-white font-semibold z-10 shadow-md`} style="transform: translateY(-95px)"></div>
-          <div class={cn(
-            "mt-3 w-[160px] transition-all",
-            hoveredIndex === index && "transform scale-105"
-          )} style="transform: translateY(-180px)">
-            <h3 class="font-semibold text-sm">{item.label}</h3>
-            <p class="text-xs text-gray-600">{item.date}</p>
-            {#if item.description}
-              <p class="text-xs text-gray-500 mt-1">{item.description}</p>
-            {/if}
-          </div>
-          {/if}
-      </button>
-    {/each}
+<div class="py-0 px-4">
+  <div class="flex items-center gap-3">
+    <!-- Left Arrow Button -->
+    <Button
+      variant="outline"
+      size="icon"
+      onclick={scrollLeft}
+      disabled={!canScrollLeft}
+      class="h-15 w-10 flex-shrink-0"
+    >
+      ←
+    </Button>
+
+    <!-- Timeline Blocks Container -->
+    <div class="flex-1 overflow-hidden">
+      <div class="flex gap-3" bind:this={scrollContainer}>
+        {#each visibleItems as item, index}
+          {@const globalIndex = currentIndex + index}
+          {@const isCurrent = item.type === 'current'}
+                <button
+                  onclick={() => showOKRSnapshotForDate(item.date)}
+                  title={item.description}
+                  class={cn(
+                    "flex-1 min-w-[200px] max-w-[200x] p-2 rounded-lg border-2 transition-all hover:shadow-lg hover:scale-105 cursor-pointer",
+                    isCurrent ? "bg-gradient-to-br from-red-50 to-red-100 shadow-md" : "bg-white hover:bg-gray-50"
+                  )}
+                >
+                  <div class="flex items-center text-center gap-2">
+                    <!-- Icon -->
+                    <div class={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center text-white text-lg shadow-sm",
+                      typeColor[item.type] ?? "bg-blue-500"
+                    )}>
+                      {getTypeIcon(item.type)}
+                    </div>
+                    <div class="flex flex-col items-center text-center gap-0">
+                    <!-- Label -->
+                    <h3 class="font-semibold text-sm text-gray-900 line-clamp-2">
+                      {item.label}
+                    </h3>
+                    <!-- Date -->
+                    <p class="text-xs text-gray-600">
+                      {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+                </button>
+        {/each}
+      </div>
+    </div>
+
+    <!-- Right Arrow Button -->
+    <Button
+      variant="outline"
+      size="icon"
+      onclick={scrollRight}
+      disabled={!canScrollRight}
+      class="h-15 w-10 flex-shrink-0"
+    >
+      →
+    </Button>
   </div>
 </div>
 
