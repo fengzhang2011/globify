@@ -38,6 +38,14 @@
       description: 'Track Leads and Close Opportunities'
     },
     {
+      id: 'sales',
+      name: 'Sales',
+      icon: '📄',
+      color: 'bg-gradient-to-br from-indigo-500 to-indigo-600',
+      route: '/sales',
+      description: 'Quotations and Invoices Management'
+    },
+    {
       id: 'chat',
       name: 'Chat',
       icon: '💬',
