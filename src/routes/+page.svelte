@@ -97,13 +97,13 @@
 </script>
 
 <svelte:head>
-  <title>Globify - Project Management Suite</title>
+  <title>Octyde - Project Management Suite</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 flex flex-col">
   <!-- Header -->
   <div class="pt-12 pb-8 text-center">
-    <h1 class="text-5xl font-bold text-slate-900 mb-3">Globify</h1>
+    <h1 class="text-5xl font-bold text-slate-900 mb-3">Octyde</h1>
     <p class="text-lg text-slate-600">Your Complete Project Management Suite</p>
   </div>
 

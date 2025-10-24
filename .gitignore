@@ -29,3 +29,9 @@ src/lib/paraglide
 *.mp4
 pnpm-lock.yaml
 project.inlang/
+
+# Backup files from deployment prep
+src/demo-backup/
+src/analytics-backup/
+src/kanban-test-backup/
+src/Kanban-shadcn.svelte.backup

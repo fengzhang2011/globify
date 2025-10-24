@@ -237,6 +237,8 @@
     <div class="grid grid-cols-6 gap-4">
       {#each stages as stage}
         <div
+          role="region"
+          aria-label="{stage.label} column"
           class="flex flex-col"
           ondragover={handleDragOver}
           ondrop={handleDrop(stage.key)}
