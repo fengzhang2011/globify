@@ -62,6 +62,14 @@
       description: 'Collaborative Silent Whiteboard Sessions'
     },
     {
+      id: 'manual',
+      name: 'Manual Editor',
+      icon: '📖',
+      color: 'bg-gradient-to-br from-amber-500 to-orange-600',
+      route: '/manual',
+      description: 'Professional Product Manual Editor with PDF Export'
+    },
+    {
       id: 'analytics',
       name: 'Analytics',
       icon: '📊',
