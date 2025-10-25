@@ -89,12 +89,18 @@
 				{#each message.attachments as attachment}
 					{#if attachment.type === 'image'}
 						<div class="image-attachment">
-							<img
-								src={attachment.url}
-								alt={attachment.name}
-								class="rounded-lg max-w-sm max-h-96 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+							<button
+								type="button"
 								onclick={() => window.open(attachment.url, '_blank')}
-							/>
+								class="block focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
+								aria-label="Open image in new tab"
+							>
+								<img
+									src={attachment.url}
+									alt={attachment.name}
+									class="rounded-lg max-w-sm max-h-96 object-cover hover:opacity-90 transition-opacity"
+								/>
+							</button>
 							<p class="text-xs text-slate-500 mt-1">{attachment.name}</p>
 						</div>
 					{:else if attachment.type === 'video'}

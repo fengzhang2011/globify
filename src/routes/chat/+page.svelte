@@ -54,25 +54,7 @@
 	let conversationsList = $derived($conversationsStore);
 
 	onMount(async () => {
-    await chatStore.loadConversations();
-    return;
-		// Initialize demo data first (works offline)
-		await initializeDemoData();
-
-		// Then initialize chat services (may fail if servers are down)
-		await chatStore.initialize(
-			'ws://localhost:8083/mqtt', // NanoMQ WebSocket URL
-			'ws://localhost:3001' // Local uWebSockets.js server URL
-		);
-
-		// Join default room after everything is loaded
-		const defaultRoom = conversationsList.find((c) => c.type === 'room');
-		if (defaultRoom) {
-			currentConversationId = defaultRoom.id;
-			currentConversationName = defaultRoom.name;
-			currentConversationType = 'room';
-			await chatStore.joinConversation(defaultRoom.id, 'room');
-		}
+		await chatStore.loadConversations();
 	});
 
 	onDestroy(() => {

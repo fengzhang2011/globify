@@ -68,7 +68,14 @@
 {#if open}
 	<div class="fixed inset-0 z-50 flex items-center justify-center">
 		<!-- Backdrop -->
-		<div class="absolute inset-0 bg-black/50" onclick={handleClose}></div>
+		<div
+			class="absolute inset-0 bg-black/50"
+			onclick={handleClose}
+			onkeydown={(e) => e.key === 'Escape' && handleClose()}
+			role="button"
+			tabindex="-1"
+			aria-label="Close dialog"
+		></div>
 
 		<!-- Dialog -->
 		<div class="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6 z-10">
