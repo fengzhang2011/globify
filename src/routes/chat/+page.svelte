@@ -119,7 +119,7 @@
 				conversationType: 'room',
 				userId: 'user-alice',
 				username: 'Alice',
-				content: 'Welcome to Globify Chat! 👋 Try creating rooms, adding contacts, and sending messages with @mentions, images, and emojis!',
+				content: 'Welcome to Chat! 👋 Try creating rooms, adding contacts, and sending messages with @mentions, images, and emojis!',
 				messageType: 'text',
 				timestamp: Date.now() - 60000, // 1 minute ago
 				synced: true
@@ -365,7 +365,7 @@
 </script>
 
 <svelte:head>
-	<title>Globify Chat - Real-time Messaging</title>
+	<title>Chat - Real-time Messaging</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 flex flex-col">
@@ -378,7 +378,7 @@
             ←
           </Button>
           <div>
-            <h1 class="text-2xl font-bold text-slate-900">Globify Chat</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Chat</h1>
             <p class="text-sm text-slate-600">Real-time messaging with MQTT & WebSockets</p>
           </div>
         </div>
@@ -471,7 +471,7 @@
 					<!-- No conversation selected -->
 					<div class="flex items-center justify-center h-full text-slate-500">
 						<div class="text-center">
-							<p class="text-lg mb-2">Welcome to Globify Chat</p>
+							<p class="text-lg mb-2">Welcome to Chat</p>
 							<p class="text-sm">Select a room or contact to start chatting</p>
 						</div>
 					</div>

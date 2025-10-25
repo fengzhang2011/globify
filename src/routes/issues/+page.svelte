@@ -183,7 +183,7 @@
 </script>
 
 <svelte:head>
-  <title>Issues - Globify</title>
+  <title>Issues</title>
 </svelte:head>
 
 <div class="min-h-screen bg-slate-50">

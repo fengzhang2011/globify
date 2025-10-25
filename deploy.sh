@@ -11,8 +11,9 @@ echo "=============================="
 # Check if build directory exists
 if [ ! -d "build" ]; then
   echo "❌ Build directory not found. Running build..."
-  pnpm build
+  mkdir build
 fi
+pnpm build
 
 # Default values
 SERVER=${1:-"user@your-server"}
