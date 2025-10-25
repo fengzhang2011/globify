@@ -10,6 +10,8 @@
   import { Textarea } from '$lib/components/ui/textarea';
   import * as Select from '$lib/components/ui/select';
   import * as Tabs from '$lib/components/ui/tabs';
+  import * as Switch from '$lib/components/ui/switch';
+  import { goto } from '$app/navigation';
 
   // Configure marked with highlight.js
   marked.setOptions({
@@ -103,6 +105,8 @@ Thank you for using our product. For more information, visit our website.
 
   let renderedHTML = $state('');
   let tocHTML = $state('');
+  let previewIframe: HTMLIFrameElement;
+  let isWysiwygMode = $state(false);
 
   // Configuration
   let companyName = $state('Your Company Name');
@@ -113,6 +117,11 @@ Thank you for using our product. For more information, visit our website.
   // Page settings
   let pageSize = $state<'A4' | 'Letter' | 'Legal'>('A4');
   let marginSize = $state('1in');
+  let zoom = $state(0.5); // Zoom level for WYSIWYG preview
+
+  const pageSizeTriggerContent = $derived(
+    pageSize ?? "Select a fruit"
+  );
 
   // PDF iframe
   let pdfIframe: HTMLIFrameElement;
@@ -121,6 +130,34 @@ Thank you for using our product. For more information, visit our website.
     id: string;
     text: string;
     level: number;
+  }
+
+  // Get page dimensions in pixels
+  function getPageDimensions() {
+    const dimensions = {
+      'A4': { width: 794, height: 1123 }, // A4 at 96 DPI
+      'Letter': { width: 816, height: 1056 }, // Letter at 96 DPI
+      'Legal': { width: 816, height: 1344 } // Legal at 96 DPI
+    };
+    return dimensions[pageSize];
+  }
+
+  // Convert margin to pixels (approximate)
+  function marginToPx(margin: string): number {
+    const match = margin.match(/^([\d.]+)(in|cm|mm|px)?$/);
+    if (!match) return 96; // Default 1in
+
+    const value = parseFloat(match[1]);
+    const unit = match[2] || 'in';
+
+    const conversions = {
+      'in': 96,
+      'cm': 37.8,
+      'mm': 3.78,
+      'px': 1
+    };
+
+    return value * (conversions[unit as keyof typeof conversions] || 96);
   }
 
   // Generate Table of Contents
@@ -173,7 +210,7 @@ Thank you for using our product. For more information, visit our website.
     // Sanitize HTML
     html = DOMPurify.sanitize(html, {
       ADD_TAGS: ['div'],
-      ADD_ATTR: ['class']
+      ADD_ATTR: ['class', 'id', 'style']
     });
 
     return html;
@@ -186,6 +223,11 @@ Thank you for using our product. For more information, visit our website.
 
     tocHTML = toc;
     renderedHTML = htmlWithIds;
+
+    // Update preview iframe if in WYSIWYG mode
+    if (isWysiwygMode) {
+      updatePreview();
+    }
   }
 
   // Get print stylesheet
@@ -231,6 +273,178 @@ Thank you for using our product. For more information, visit our website.
       th, td { border: 1px solid #e0e0e0; padding: 8pt; text-align: left; }
       th { background: #f5f5f5; font-weight: 600; }
     `;
+  }
+
+  // Get preview stylesheet (WYSIWYG)
+  function getPreviewStylesheet() {
+    const dims = getPageDimensions();
+    const margin = marginToPx(marginSize);
+
+    return `
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica", "Arial", sans-serif;
+        font-size: 11pt;
+        line-height: 1.6;
+        color: #000;
+        background: #e5e7eb;
+        padding: 20px;
+      }
+
+      .page {
+        width: ${dims.width}px;
+        height: ${dims.height}px;
+        background: white;
+        margin: 0 auto 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: relative;
+        page-break-after: always;
+        overflow: hidden;
+      }
+
+      .page-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 ${margin}px;
+        font-size: 9pt;
+        color: #666;
+        border-bottom: 1px solid #e0e0e0;
+        background: white;
+        z-index: 10;
+      }
+
+      .page-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 ${margin}px;
+        font-size: 9pt;
+        color: #666;
+        border-top: 1px solid #e0e0e0;
+        background: white;
+        z-index: 10;
+      }
+
+      .page-content {
+        position: absolute;
+        top: 60px;
+        left: ${margin}px;
+        right: ${margin}px;
+        bottom: 60px;
+        overflow: hidden;
+      }
+
+      h1 { font-size: 28pt; font-weight: 700; margin: 24pt 0 12pt 0; color: #000; }
+      h2 { font-size: 20pt; font-weight: 600; margin: 20pt 0 10pt 0; color: #000; }
+      h3 { font-size: 16pt; font-weight: 600; margin: 16pt 0 8pt 0; color: #000; }
+      p { margin: 0 0 12pt 0; }
+      ul, ol { margin: 0 0 12pt 24pt; }
+      li { margin: 4pt 0; }
+      code { font-family: "Consolas", "Monaco", "Courier New", monospace; background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 10pt; }
+      pre { background: #f5f5f5; padding: 12pt; border-radius: 6px; margin: 12pt 0; overflow-x: auto; }
+      pre code { background: none; padding: 0; font-size: 9pt; }
+      blockquote { border-left: 4px solid #e0e0e0; padding-left: 16pt; margin: 12pt 0; color: #666; }
+
+      .toc-container { margin-bottom: 24pt; }
+      .toc-title { font-size: 24pt; font-weight: 700; margin-bottom: 16pt; }
+      .toc-list { list-style: none; margin: 0; padding: 0; }
+      .toc-item { margin: 6pt 0; }
+      .toc-link { color: #000; text-decoration: none; }
+      .toc-link:hover { text-decoration: underline; }
+      .toc-level-1 { font-weight: 600; font-size: 12pt; }
+      .toc-level-2 { font-size: 11pt; }
+      .toc-level-3 { font-size: 10pt; color: #666; }
+
+      table { border-collapse: collapse; width: 100%; margin: 12pt 0; }
+      th, td { border: 1px solid #e0e0e0; padding: 8pt; text-align: left; }
+      th { background: #f5f5f5; font-weight: 600; }
+
+      a { color: #2563eb; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      .page-break-marker {
+        height: 0;
+        border-top: 2px dashed #ef4444;
+        margin: 20px 0;
+        position: relative;
+      }
+
+      .page-break-marker::after {
+        content: "Page Break";
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ef4444;
+        color: white;
+        padding: 2px 8px;
+        font-size: 8pt;
+        border-radius: 3px;
+      }
+    `;
+  }
+
+  // Split content into pages for WYSIWYG view
+  function splitIntoPages(content: string): string[] {
+    // For now, we'll create one page with all content
+    // In a production app, you'd implement actual pagination logic
+    const pages = [content];
+
+    // Check for explicit page breaks
+    const parts = content.split('<div class="page-break"></div>');
+    if (parts.length > 1) {
+      return parts;
+    }
+
+    return pages;
+  }
+
+  // Update preview iframe
+  function updatePreview() {
+    if (!previewIframe) return;
+
+    const iframeDoc = previewIframe.contentDocument;
+    if (!iframeDoc) return;
+
+    // Create paginated content
+    const fullContent = tocHTML + renderedHTML;
+    const pages = splitIntoPages(fullContent);
+
+    // Build HTML for preview - show all pages
+    const pageParts = ['<!DOCTYPE html><html><head><meta charset="UTF-8">'];
+    pageParts.push('<title>Preview</title>');
+    pageParts.push('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">');
+    pageParts.push('<style>' + getPreviewStylesheet() + '</style>');
+    pageParts.push('</head><body>');
+
+    // Add each page
+    pages.forEach((pageContent, index) => {
+      const pageNum = index + 1;
+      pageParts.push('<div class="page">');
+      pageParts.push('<div class="page-header"><span>' + headerText + '</span><span>' + companyName + '</span></div>');
+      pageParts.push('<div class="page-content">' + pageContent + '</div>');
+      pageParts.push('<div class="page-footer"><span>' + footerText + '</span><span>' + copyright + '</span><span>Page ' + pageNum + '</span></div>');
+      pageParts.push('</div>');
+    });
+
+    pageParts.push('</body></html>');
+
+    const fullHTML = pageParts.join('');
+
+    iframeDoc.open();
+    iframeDoc.write(fullHTML);
+    iframeDoc.close();
   }
 
   // Export to PDF
@@ -315,6 +529,13 @@ Thank you for using our product. For more information, visit our website.
     saveToLocalStorage();
   });
 
+  // Watch for WYSIWYG mode changes
+  $effect(() => {
+    if (isWysiwygMode) {
+      updatePreview();
+    }
+  });
+
   onMount(() => {
     loadFromLocalStorage();
     renderMarkdown();
@@ -329,15 +550,22 @@ Thank you for using our product. For more information, visit our website.
 <div class="min-h-screen bg-slate-50">
   <!-- Header -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
-    <div class="max-w-screen-2xl mx-auto px-6 py-4">
+    <div class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900">Product Manual Editor</h1>
-          <p class="text-sm text-slate-600">Professional documentation with built-in PDF export</p>
+        <div class="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onclick={() => goto('/')}>
+            ←
+          </Button>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Product Manual Editor</h1>
+            <p class="text-sm text-slate-600">Professional documentation with built-in PDF export</p>
+          </div>
         </div>
-        <Button onclick={exportToPDF} size="lg" class="bg-blue-600 hover:bg-blue-700">
-          Export to PDF
-        </Button>
+        <div>
+          <Button onclick={exportToPDF} size="lg" class="bg-blue-600 hover:bg-blue-700">
+            Export to PDF
+          </Button>  
+        </div>
       </div>
     </div>
   </header>
@@ -365,13 +593,62 @@ Thank you for using our product. For more information, visit our website.
             </div>
           </Card>
 
-          <!-- Live Preview -->
+          <!-- Preview -->
           <Card class="p-6">
-            <h2 class="text-lg font-semibold mb-4">Live Preview</h2>
-            <div class="prose prose-slate max-w-none overflow-y-auto max-h-[700px] bg-white p-6 rounded border border-slate-200">
-              {@html tocHTML}
-              {@html renderedHTML}
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold">
+                {isWysiwygMode ? 'WYSIWYG Preview' : 'Live Preview'}
+              </h2>
+              <div class="flex items-center gap-4">
+                {#if isWysiwygMode}
+                  <div class="flex items-center gap-2">
+                    <Label for="zoom" class="text-sm">Zoom:</Label>
+                    <Input
+                      id="zoom"
+                      type="range"
+                      min="0.3"
+                      max="1"
+                      step="0.1"
+                      bind:value={zoom}
+                      class="w-24"
+                    />
+                    <span class="text-sm text-slate-600">{Math.round(zoom * 100)}%</span>
+                  </div>
+                {/if}
+                <div class="flex items-center gap-2">
+                  <Switch.Root
+                    checked={isWysiwygMode}
+                    onCheckedChange={(checked) => isWysiwygMode = checked}
+                    id="preview-mode"
+                  >
+                    <Switch.Thumb />
+                  </Switch.Root>
+                  <Label for="preview-mode" class="text-sm cursor-pointer">
+                    WYSIWYG Mode
+                  </Label>
+                </div>
+              </div>
             </div>
+
+            {#if isWysiwygMode}
+              <!-- WYSIWYG Preview -->
+              <div class="overflow-y-auto max-h-[700px] bg-slate-100 p-4 rounded border border-slate-200">
+                <div style="transform: scale({zoom}); transform-origin: top center;">
+                  <iframe
+                    bind:this={previewIframe}
+                    class="w-full border-none"
+                    title="Preview Frame"
+                    style="width: {100 / zoom}%; min-height: {1200 / zoom}px;"
+                  ></iframe>
+                </div>
+              </div>
+            {:else}
+              <!-- Normal Preview -->
+              <div class="prose prose-slate max-w-none overflow-y-auto max-h-[700px] bg-white p-6 rounded border border-slate-200">
+                {@html tocHTML}
+                {@html renderedHTML}
+              </div>
+            {/if}
           </Card>
         </div>
       </Tabs.Content>
@@ -431,19 +708,16 @@ Thank you for using our product. For more information, visit our website.
             <div class="space-y-4">
               <div>
                 <Label for="pageSize">Page Size</Label>
-                <Select.Root
-                  selected={{ value: pageSize, label: pageSize }}
-                  onSelectedChange={(selected) => {
-                    if (selected) pageSize = selected.value as 'A4' | 'Letter' | 'Legal';
-                  }}
-                >
-                  <Select.Trigger class="mt-2">
-                    <Select.Value placeholder="Select page size" />
+                <Select.Root type="single" bind:value={pageSize}>
+                  <Select.Trigger class="mt-2 w-[180px]">
+                    {pageSizeTriggerContent}
                   </Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="A4">A4</Select.Item>
-                    <Select.Item value="Letter">Letter</Select.Item>
-                    <Select.Item value="Legal">Legal</Select.Item>
+                    <Select.Group>
+                      <Select.Item value="A4">A4</Select.Item>
+                      <Select.Item value="Letter">Letter</Select.Item>
+                      <Select.Item value="Legal">Legal</Select.Item>
+                    </Select.Group>
                   </Select.Content>
                 </Select.Root>
               </div>
@@ -497,8 +771,6 @@ Thank you for using our product. For more information, visit our website.
 </div>
 
 <style>
-  @reference "tailwindcss";
-
   :global(.prose h1) {
     @apply text-3xl font-bold mt-6 mb-4;
   }
@@ -569,5 +841,14 @@ Thank you for using our product. For more information, visit our website.
 
   :global(.toc-level-3) {
     @apply text-sm text-slate-600;
+  }
+
+  :global(.page-break) {
+    @apply h-0 my-4 border-t-2 border-dashed border-red-500 relative;
+  }
+
+  :global(.page-break::after) {
+    content: 'Page Break';
+    @apply absolute -top-3 left-1/2 -translate-x-1/2 bg-red-500 text-white px-2 py-0.5 text-xs rounded;
   }
 </style>
