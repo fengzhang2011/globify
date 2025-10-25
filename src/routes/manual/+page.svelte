@@ -771,6 +771,8 @@ Thank you for using our product. For more information, visit our website.
 </div>
 
 <style>
+  @reference "tailwindcss";
+
   :global(.prose h1) {
     @apply text-3xl font-bold mt-6 mb-4;
   }
