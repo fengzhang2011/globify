@@ -65,12 +65,25 @@ function createCRMStore() {
     },
 
     async updateLead(id: string, updates: Partial<Lead>) {
-      const updatedLead = { ...updates, id, updatedAt: Date.now() } as Lead;
+      // First get the existing lead to preserve all fields
+      const existingLead = await crmDB.getLead(id);
+      if (!existingLead) {
+        throw new Error(`Lead ${id} not found`);
+      }
+
+      // Merge existing data with updates
+      const updatedLead: Lead = {
+        ...existingLead,
+        ...updates,
+        id,
+        updatedAt: Date.now(),
+      };
+
       await crmDB.saveLead(updatedLead);
 
       update(state => ({
         ...state,
-        leads: state.leads.map(l => l.id === id ? { ...l, ...updates, updatedAt: Date.now() } : l),
+        leads: state.leads.map(l => l.id === id ? updatedLead : l),
       }));
     },
 
@@ -156,12 +169,26 @@ function createCRMStore() {
     },
 
     async updateOpportunity(id: string, updates: Partial<Opportunity>) {
-      await crmDB.saveOpportunity({ ...updates, id, updatedAt: Date.now() } as Opportunity);
+      // First get the existing opportunity to preserve all fields
+      const existingOpp = await crmDB.getOpportunity(id);
+      if (!existingOpp) {
+        throw new Error(`Opportunity ${id} not found`);
+      }
+
+      // Merge existing data with updates
+      const updatedOpportunity: Opportunity = {
+        ...existingOpp,
+        ...updates,
+        id,
+        updatedAt: Date.now(),
+      };
+
+      await crmDB.saveOpportunity(updatedOpportunity);
 
       update(state => ({
         ...state,
         opportunities: state.opportunities.map(o =>
-          o.id === id ? { ...o, ...updates, updatedAt: Date.now() } : o
+          o.id === id ? updatedOpportunity : o
         ),
       }));
     },

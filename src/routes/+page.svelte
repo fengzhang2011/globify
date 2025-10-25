@@ -54,6 +54,14 @@
       description: 'Real-time Messaging with MQTT & WebSockets'
     },
     {
+      id: 'whiteboard',
+      name: 'Sketch Design',
+      icon: '🎨',
+      color: 'bg-gradient-to-br from-purple-500 to-pink-500',
+      route: '/whiteboard',
+      description: 'Collaborative Silent Whiteboard Sessions'
+    },
+    {
       id: 'analytics',
       name: 'Analytics',
       icon: '📊',
@@ -134,9 +142,11 @@
             <!-- App Name -->
             <div class="text-center">
               <h3 class="font-semibold text-slate-900 text-lg mb-1">{app.name}</h3>
+              <div class="h-5">
               <p class="text-xs text-slate-600 line-clamp-2 transition-opacity" class:opacity-100={hoveredApp === app.id} class:opacity-0={hoveredApp !== app.id}>
                 {app.description}
               </p>
+            </div>
             </div>
           </Card>
 
